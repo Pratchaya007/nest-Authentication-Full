@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { TypedConfigService } from './typed-config.service';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { validate } from './env.validation';
 
+@Global()
 @Module({
   imports: [
     NestConfigModule.forRoot({
@@ -10,5 +11,6 @@ import { validate } from './env.validation';
     }),
   ],
   providers: [TypedConfigService],
+  exports: [TypedConfigService],
 })
 export class ConfigModule {}

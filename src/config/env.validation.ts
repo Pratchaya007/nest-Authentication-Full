@@ -10,6 +10,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().min(1),
   RESEND_API_KEY: z.string().min(12),
   APP_URL: z.url(),
+  SALT_ROUNDS: z.coerce.number().min(1),
 });
 
 export type EnvConfigType = z.infer<typeof envSchema>;
