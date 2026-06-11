@@ -16,7 +16,7 @@ enum Role {
 model User {
   id                         String    @id @default(uuid())
   email                      String    @unique
-  passwordHash               String
+  password                   String
   name                       String    @db.VarChar(20)
   role                       Role      @default(USER)
   isVerified                 Boolean   @default(false)

@@ -1,0 +1,57 @@
+import { Body, ConflictException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/database/prisma.service';
+import { RegisterDto } from '../dtos/register-user.dto';
+import { UserService } from 'src/user/user.service';
+import { BcryptService } from 'src/shared/security/services/bcrypt.service';
+import { TypedConfigService } from 'src/config/typed-config.service';
+import crypto from 'crypto';
+import { EmailService } from './email.service';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+    private readonly bcryptServiec: BcryptService,
+    private readonly typedConfigService: TypedConfigService,
+    private readonly emailService: EmailService,
+  ) {}
+
+  async create(regiterDto: RegisterDto) {
+    //ค้นหาก่อนเลยมี Email ใน db ไหม
+    const user = await this.userService.findByEmail(regiterDto.email);
+
+    // เช็คว่าเจอไหมใน db
+    if (user) {
+      throw new ConflictException('An account with this email already exists');
+    }
+
+    // Hash Password
+    const isMatch = await this.bcryptServiec.hash(regiterDto.password);
+
+    // create verificationToken
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpiresAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000, // 24 hr
+    );
+
+    //insert to db
+    const createUser = await this.userService.create({
+      email: regiterDto.email,
+      password: isMatch,
+      name: regiterDto.name,
+      verificationToken,
+      verificationTokenExpiresAt,
+    });
+
+    void this.emailService.sendVerificationEamil(
+      createUser.email,
+      verificationToken,
+    );
+
+    return {
+      message:
+        'Registration Successful. Please check your email to verify your account',
+    };
+  }
+}
