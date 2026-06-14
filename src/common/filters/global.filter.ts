@@ -24,14 +24,13 @@ export class GlobalFilter<T> implements ExceptionFilter {
         : 'Internal Server Error';
 
     const message =
-      typeof exceptionResponse === 'string'
+      typeof exceptionResponse === 'object'
         ? exceptionResponse
-        : ((exceptionResponse as Record<string, unknown>).message ??
-          exceptionResponse);
+        : { message: exceptionResponse };
 
     response.status(status).json({
       statusCode: status,
-      message,
+      ...message,
       timestamp: new Date().toISOString(),
       path: request.url,
     });
