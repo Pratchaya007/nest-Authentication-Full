@@ -18,4 +18,46 @@ export class UserService {
       where: { email },
     });
   }
+
+  async update(id: string, data: Partial<User>) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data,
+    });
+    return user;
+  }
+
+  async findAll() {
+    return this.prisma.user.findMany();
+  }
+
+  async delete(id: string) {
+    await this.prisma.user.delete({
+      where: { id },
+    });
+  }
+
+  async findById(id: string) {
+    return this.prisma.user.findFirst({
+      where: { id },
+    });
+  }
+
+  async findEmail(email: string) {
+    return this.prisma.user.findFirst({
+      where: { email },
+    });
+  }
+
+  async findByResetToken(token: string) {
+    return this.prisma.user.findFirst({
+      where: { resetToken: token },
+    });
+  }
+
+  async findByVerificationToken(token: string) {
+    return this.prisma.user.findFirst({
+      where: { verificationToken: token },
+    });
+  }
 }
