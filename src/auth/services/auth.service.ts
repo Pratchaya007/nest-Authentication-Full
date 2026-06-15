@@ -148,9 +148,98 @@ export class AuthService {
   async getCurrentUser(id: string): Promise<UserWithOutPassword> {
     return this.userService.findById(id);
   }
+  async refresh(refreshToekn: string, res: Response) {
+    //check token
+    if (!refreshToekn) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+    //find jwtrefresh in auth-tokenservice.
+    const payload =
+      await this.authtokenService.verifyRefreshToken(refreshToekn);
+    // find sub.id in database
+    const user = await this.userService.findById(payload.sub);
+
+    // ถ้าไม่เจอข้อมูล user and user.refreshToken throw new Error
+    if (!user || !user.refreshTokenHash) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    // Compare refreshToken เอามาเปรียบเทียบกันว่าตรงกันไหม
+    const tokenMatch = await this.bcryptServiec.compare(
+      refreshToekn,
+      user.refreshTokenHash,
+    );
+    // ไม่ตรงส่งอะไรออกไป
+    if (!tokenMatch) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const tokens = await this.generateToken(user);
+    await this.seveRefreshToken(user.id, tokens.refreshToken);
+    this.setRefreshTokenCookie(res, tokens.refreshToken);
+
+    return {
+      accessToken: tokens.accessToken,
+    };
+  }
+  async logout(userId: string, res: Response) {
+    //เข้าไปเคลียร์ค่า refresh in db ==> null
+    await this.userService.update(userId, { refreshTokenHash: null });
+
+    res.clearCookie('refresh_token');
+    return { message: 'Logout successfully!' };
+  }
+  async forgotPassword(email: string) {
+    // find email in db
+    const user = await this.userService.findByEmail(email);
+    if (!user)
+      throw new BadRequestException('No account found with this email address');
+
+    // Create token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); //1hr
+
+    // updata in database
+    await this.userService.update(user.id, {
+      resetToken,
+      resetTokenExpiresAt,
+    });
+
+    // Send Password in Email
+    void this.emailService.sendPasswordResetEmail(user.email, resetToken);
+
+    return {
+      message:
+        'If an account with that email existe, a reset link has been sent',
+    };
+  }
+  async resetPassword(token: string, newPassword: string) {
+    // find token
+    const user = await this.userService.findByResetToken(token);
+    // Throw err
+    if (!user || !user.resetToken) {
+      throw new BadRequestException('Invalid reset token');
+    }
+    //เช็กว่า resetTokenExpiresAt มีค่าไหม  ถ้ามี และเวลาหมดอายุ น้อยกว่าเวลาปัจจุบัน  แปลว่า Reset Token หมดอายุแล้ว
+    if (user.resetTokenExpiresAt && user.resetTokenExpiresAt < new Date()) {
+      throw new BadRequestException(
+        'Reset token has expired. Please request a new one',
+      );
+    }
+    // Hash New Password
+    const password = await this.bcryptServiec.hash(newPassword);
+
+    // Updata in db
+    await this.userService.update(user.id, {
+      password,
+      resetToken: null,
+      resetTokenExpiresAt: null,
+      refreshTokenHash: null,
+    });
+
+    return { message: 'Password reset successfully. You can now log in' };
+  }
 
   //generateToken(user) — คนปั๊มตั๋ว 🎫
-  private async generateToken(user: User) {
+  private async generateToken(user: Omit<User, 'password'>) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { TypedConfigService } from 'src/config/typed-config.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'src/types/jwt-payload.type';
@@ -33,10 +33,14 @@ export class AuthTokenService {
     });
   }
 
-  verifyRefreshToken(token: string): Promise<JwtPayload> {
-    return this.jwtService.verifyAsync(token, {
-      secret: this.typedConfigService.get('JWT_REFRESH_SECRET'),
-    });
+  async verifyRefreshToken(token: string): Promise<JwtPayload> {
+    try {
+      return await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: this.typedConfigService.get('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 }
 
