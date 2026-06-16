@@ -6,6 +6,9 @@ import { UserModule } from './user/user.module';
 import { SecurityModule } from './shared/security/security.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/guards/auth.guard';
+import { RoleGuard } from './auth/guards/role.guard';
+import { TasksModule } from './tasks/tasks.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -14,11 +17,17 @@ import { AuthGuard } from './auth/guards/auth.guard';
     DatabaseModule,
     UserModule,
     SecurityModule,
+    TasksModule,
+    AdminModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
     },
   ],
 })

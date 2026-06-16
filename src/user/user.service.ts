@@ -3,7 +3,6 @@ import { User } from 'src/database/generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBaseDto } from './dtos/create-base.dto';
 import { UserWithOutPassword } from './types/user.type';
-import { MeResponseDto } from 'src/auth/dtos/me-response.dto';
 
 @Injectable()
 export class UserService {
