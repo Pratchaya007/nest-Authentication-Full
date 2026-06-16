@@ -3,6 +3,7 @@ import { User } from 'src/database/generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateBaseDto } from './dtos/create-base.dto';
 import { UserWithOutPassword } from './types/user.type';
+import { MeResponseDto } from 'src/auth/dtos/me-response.dto';
 
 @Injectable()
 export class UserService {
@@ -51,6 +52,18 @@ export class UserService {
 
     return user;
   }
+  // async findByIdCurrent(id: string): Promise<MeResponseDto> {
+  //   const user = await this.prisma.user.findUnique({
+  //     where: { id },
+  //   });
+  //   if (!user)
+  //     throw new NotFoundException({
+  //       message: 'User with provided id not found',
+  //       code: 'User Not Found',
+  //     });
+
+  //   return user;
+  // }
 
   async findEmail(email: string) {
     return this.prisma.user.findFirst({

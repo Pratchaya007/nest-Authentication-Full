@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Get,
   HttpCode,
@@ -8,6 +9,8 @@ import {
   Query,
   Req,
   Res,
+  SerializeOptions,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { RegisterDto } from './dtos/register-user.dto';
@@ -17,9 +20,9 @@ import { LoginDto } from './dtos/login-user.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { JwtPayload } from 'src/types/jwt-payload.type';
-import { UserWithOutPassword } from 'src/user/types/user.type';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { MeResponseDto } from './dtos/me-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -56,10 +59,12 @@ export class AuthController {
   }
 
   // GET /api/auth/me
+  @UseInterceptors(ClassSerializerInterceptor)
+  @SerializeOptions({ type: MeResponseDto, excludeExtraneousValues: true })
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current authorization user' })
-  async getMe(@CurrentUser() user: JwtPayload): Promise<UserWithOutPassword> {
+  async getMe(@CurrentUser() user: JwtPayload): Promise<MeResponseDto> {
     return this.authService.getCurrentUser(user.sub);
   }
 

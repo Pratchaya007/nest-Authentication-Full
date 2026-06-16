@@ -17,7 +17,7 @@ import { AuthTokenService } from 'src/shared/security/services/auth-token.servic
 import { JwtPayload } from 'src/types/jwt-payload.type';
 import { Response } from 'express';
 import { LoginDto } from '../dtos/login-user.dto';
-import { UserWithOutPassword } from 'src/user/types/user.type';
+import { MeResponseDto } from '../dtos/me-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -145,7 +145,7 @@ export class AuthService {
       },
     };
   }
-  async getCurrentUser(id: string): Promise<UserWithOutPassword> {
+  async getCurrentUser(id: string): Promise<MeResponseDto> {
     return this.userService.findById(id);
   }
   async refresh(refreshToekn: string, res: Response) {
