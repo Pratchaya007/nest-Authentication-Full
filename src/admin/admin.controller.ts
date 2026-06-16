@@ -1,7 +1,11 @@
 import { Controller, Delete, Get, Param } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/auth/decorators/role.decorator';
 import { UserService } from 'src/user/user.service';
 
+@ApiTags('Admin')
+@ApiBearerAuth()
+@Roles('ADMIN')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly userService: UserService) {}

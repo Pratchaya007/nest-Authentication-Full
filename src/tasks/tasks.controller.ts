@@ -10,9 +10,11 @@ import {
 import { TasksService } from './tasks.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/types/jwt-payload.type';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateTaskDto } from './dtos/create-task.dto';
 
+@ApiBearerAuth()
+@ApiTags('Tasks')
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly taskService: TasksService) {}
